@@ -1,0 +1,122 @@
+name: Update Kairos Lab Formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example: v1.2.3 or 1.2.3)"
+        required: true
+        type: string
+      sha256_darwin_arm64:
+        description: "SHA256 for darwin arm64 tarball"
+        required: true
+        type: string
+      sha256_linux_amd64:
+        description: "SHA256 for linux amd64 tarball"
+        required: true
+        type: string
+      sha256_linux_arm64:
+        description: "SHA256 for linux arm64 tarball"
+        required: true
+        type: string
+  repository_dispatch:
+    types: [kairos-lab-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve input values
+        id: vars
+        shell: bash
+        run: |
+          VERSION=$(jq -r '.client_payload.version // .inputs.version // empty' "$GITHUB_EVENT_PATH")
+          SHA_DARWIN_ARM64=$(jq -r '.client_payload.sha256_darwin_arm64 // .inputs.sha256_darwin_arm64 // empty' "$GITHUB_EVENT_PATH")
+          SHA_LINUX_AMD64=$(jq -r '.client_payload.sha256_linux_amd64 // .inputs.sha256_linux_amd64 // empty' "$GITHUB_EVENT_PATH")
+          SHA_LINUX_ARM64=$(jq -r '.client_payload.sha256_linux_arm64 // .inputs.sha256_linux_arm64 // empty' "$GITHUB_EVENT_PATH")
+
+          if [ -z "$VERSION" ] || [ -z "$SHA_DARWIN_ARM64" ] || [ -z "$SHA_LINUX_AMD64" ] || [ -z "$SHA_LINUX_ARM64" ]; then
+            echo "Missing one or more required fields: version, sha256_darwin_arm64, sha256_linux_amd64, sha256_linux_arm64"
+            exit 1
+          fi
+
+          VERSION_NO_V="${VERSION#v}"
+
+          echo "version=$VERSION_NO_V" >> "$GITHUB_OUTPUT"
+          echo "sha_darwin_arm64=$SHA_DARWIN_ARM64" >> "$GITHUB_OUTPUT"
+          echo "sha_linux_amd64=$SHA_LINUX_AMD64" >> "$GITHUB_OUTPUT"
+          echo "sha_linux_arm64=$SHA_LINUX_ARM64" >> "$GITHUB_OUTPUT"
+
+      - name: Update formula
+        env:
+          VERSION: ${{ steps.vars.outputs.version }}
+          SHA_DARWIN_ARM64: ${{ steps.vars.outputs.sha_darwin_arm64 }}
+          SHA_LINUX_AMD64: ${{ steps.vars.outputs.sha_linux_amd64 }}
+          SHA_LINUX_ARM64: ${{ steps.vars.outputs.sha_linux_arm64 }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          path = Path("Formula/kairos-lab.rb")
+          content = path.read_text()
+
+          version = os.environ["VERSION"]
+          sha_darwin = os.environ["SHA_DARWIN_ARM64"]
+          sha_linux_amd64 = os.environ["SHA_LINUX_AMD64"]
+          sha_linux_arm64 = os.environ["SHA_LINUX_ARM64"]
+
+          content = re.sub(r'version\s+"[^"]+"', f'version "{version}"', content, count=1)
+          content = re.sub(
+              r'(darwin_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{sha_darwin}\2',
+              content,
+              count=1,
+          )
+          content = re.sub(
+              r'(linux_amd64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{sha_linux_amd64}\2',
+              content,
+              count=1,
+          )
+          content = re.sub(
+              r'(linux_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{sha_linux_arm64}\2',
+              content,
+              count=1,
+          )
+
+          path.write_text(content)
+          PY
+
+      - name: Run formula checks
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Validate formula
+        run: |
+          brew style Formula/kairos-lab.rb
+          brew audit --strict --online kairos-lab
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "kairos-lab ${{ steps.vars.outputs.version }}"
+          title: "kairos-lab ${{ steps.vars.outputs.version }}"
+          body: |
+            Automated formula update for `kairos-lab`.
+
+            - Version: `${{ steps.vars.outputs.version }}`
+            - Updated platform checksums:
+              - darwin arm64
+              - linux amd64
+              - linux arm64
+          branch: chore/update-kairos-lab-${{ steps.vars.outputs.version }}
+          delete-branch: true
