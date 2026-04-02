@@ -74,22 +74,21 @@ jobs:
           sha_linux_amd64 = os.environ["SHA_LINUX_AMD64"]
           sha_linux_arm64 = os.environ["SHA_LINUX_ARM64"]
 
-          content = re.sub(r'version\s+"[^"]+"', f'version "{version}"', content, count=1)
           content = re.sub(
-              r'(darwin_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{sha_darwin}\2',
+              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_darwin_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{version}\g<2>{version}\g<3>{sha_darwin}\4',
               content,
               count=1,
           )
           content = re.sub(
-              r'(linux_amd64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{sha_linux_amd64}\2',
+              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_linux_amd64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{version}\g<2>{version}\g<3>{sha_linux_amd64}\4',
               content,
               count=1,
           )
           content = re.sub(
-              r'(linux_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{sha_linux_arm64}\2',
+              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_linux_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{version}\g<2>{version}\g<3>{sha_linux_arm64}\4',
               content,
               count=1,
           )
