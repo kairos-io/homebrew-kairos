@@ -1,5 +1,5 @@
 class KairosLab < Formula
-  desc "Kairos Lab CLI"
+  desc "Local workshop CLI for Kairos OS"
   homepage "https://github.com/kairos-io/kairos-lab"
   version "0.0.0-alpha1"
   license "Apache-2.0"
