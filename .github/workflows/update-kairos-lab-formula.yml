@@ -105,7 +105,7 @@ jobs:
           brew audit --strict --online kairos-lab
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           sign-commits: true
           commit-message: "kairos-lab ${{ steps.vars.outputs.version }}"
