@@ -54,6 +54,9 @@ jobs:
           echo "sha_linux_amd64=$SHA_LINUX_AMD64" >> "$GITHUB_OUTPUT"
           echo "sha_linux_arm64=$SHA_LINUX_ARM64" >> "$GITHUB_OUTPUT"
 
+      - name: Setup Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Update formula
         env:
           VERSION: ${{ steps.vars.outputs.version }}
@@ -95,9 +98,6 @@ jobs:
 
           path.write_text(content)
           PY
-
-      - name: Run formula checks
-        uses: Homebrew/actions/setup-homebrew@master
 
       - name: Validate formula
         run: |
