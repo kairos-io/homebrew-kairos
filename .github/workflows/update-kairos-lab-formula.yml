@@ -107,6 +107,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
+          sign-commits: true
           commit-message: "kairos-lab ${{ steps.vars.outputs.version }}"
           title: "kairos-lab ${{ steps.vars.outputs.version }}"
           body: |
