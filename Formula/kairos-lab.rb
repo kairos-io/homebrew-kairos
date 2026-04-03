@@ -5,20 +5,20 @@ class KairosLab < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.0.0-alpha1/kairos-lab_0.0.0-alpha1_darwin_arm64.tar.gz"
-      sha256 "8042cb46194d0de7b0f41fb5af498ab42e9d771697bc151b866dac32c7f4bd10"
+      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.1.0-rc.8/kairos-lab_0.1.0-rc.8_darwin_arm64.tar.gz"
+      sha256 "8929eb2b23d5defb0dfe4f9f6ed4906eab111e5786b2e719a0665758f89d3207"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.0.0-alpha1/kairos-lab_0.0.0-alpha1_linux_amd64.tar.gz"
-      sha256 "cddfe22a70d5d76ac508711a495053fc460d929546f27ca7da43b56658a61772"
+      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.1.0-rc.8/kairos-lab_0.1.0-rc.8_linux_amd64.tar.gz"
+      sha256 "f41e810e682ae8c411e321aee58ffe2296f7cffeceb71b6d23a4e7616fc4fb31"
     end
 
     on_arm do
-      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.0.0-alpha1/kairos-lab_0.0.0-alpha1_linux_arm64.tar.gz"
-      sha256 "3fd7cf4c68be4821cbc4f01a0daf8176c160d25bcbe307d4dbe910231c8788d9"
+      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.1.0-rc.8/kairos-lab_0.1.0-rc.8_linux_arm64.tar.gz"
+      sha256 "4c89fc5b74198e32324ea6633d1cd60c20110e15bfd746b478e5c98607387b75"
     end
   end
 
