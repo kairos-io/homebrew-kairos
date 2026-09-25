@@ -55,7 +55,7 @@ jobs:
           echo "sha_linux_arm64=$SHA_LINUX_ARM64" >> "$GITHUB_OUTPUT"
 
       - name: Setup Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Update formula
         env:
