@@ -5,8 +5,8 @@ class KairosLab < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/kairos-io/kairos-lab/releases/download/v0.1.4/kairos-lab_0.1.4_darwin_arm64.tar.gz"
-      sha256 "f7abae2939f8205aed95cb7bf2d7999e16721c96f405504d017aca2e0cd6dedc"
+      url "https://github.com/kairos-io/kairos-lab/archive/refs/tags/v0.1.5.tar.gz"
+      sha256 "2e5c5fdaa672002c2db46d22a6930e6eef45b5c876aed7dc70f7d3be3aa46768"
     end
   end
 
