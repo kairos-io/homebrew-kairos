@@ -2,5 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "description": [
+    "Formula/kairos-lab.rb holds one release-asset URL per platform and is written by .github/workflows/update-kairos-lab-formula.yml, which kairos-lab dispatches on every tag.",
+    "Renovate's homebrew manager rewrites the first url it finds to a source tarball and leaves the other platforms behind, so it is off here."
+  ],
+  "homebrew": {
+    "enabled": false
+  }
 }

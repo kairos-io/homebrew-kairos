@@ -10,7 +10,7 @@ Homebrew tap for Kairos CLI tools.
 ## Install
 
 ```bash
-brew tap <ORG>/<TAP_REPO>
+brew tap kairos-io/kairos
 brew install kairos-lab
 ```
 

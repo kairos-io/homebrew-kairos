@@ -20,3 +20,30 @@ jobs:
         run: |
           brew style Formula/kairos-lab.rb
           brew audit --strict --online kairos-lab
+
+      # `brew style` and `brew audit` only look at the platform they run on, so
+      # a formula can pass both and still be rejected at `brew tap` time on
+      # another one. Homebrew loads every formula once per os/arch pair when it
+      # installs a tap, and a single pass with no matching `url` fails the whole
+      # tap for everybody. `brew readall` runs the same loop.
+      - name: Check the tap loads on every OS and architecture
+        run: |
+          set -euo pipefail
+
+          tap_dir="$(brew --repository)/Library/Taps/kairos-io/homebrew-kairos"
+          mkdir -p "$(dirname "${tap_dir}")"
+          ln -s "${GITHUB_WORKSPACE}" "${tap_dir}"
+
+          # `brew readall` skips taps it does not trust and still exits 0, so
+          # trust this one first on the Homebrew versions that ask.
+          if brew commands --quiet | grep -qx trust; then
+            brew trust kairos-io/kairos
+          fi
+
+          log="$(mktemp)"
+          brew readall --os=all --arch=all kairos-io/kairos 2>&1 | tee "${log}"
+
+          if grep -q "not trusted" "${log}"; then
+            echo "::error::brew readall skipped the tap, so nothing was checked"
+            exit 1
+          fi

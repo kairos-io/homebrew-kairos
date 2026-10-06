@@ -49,10 +49,17 @@ jobs:
 
           VERSION_NO_V="${VERSION#v}"
 
+          # kairos-lab ships no darwin amd64 binary, so Intel Macs build from
+          # the source tarball. It is not one of the dispatched checksums, so
+          # read it off the tag here.
+          SOURCE_URL="https://github.com/kairos-io/kairos-lab/archive/refs/tags/v${VERSION_NO_V}.tar.gz"
+          SHA_SOURCE=$(curl -fsSL "$SOURCE_URL" | sha256sum | cut -d' ' -f1)
+
           echo "version=$VERSION_NO_V" >> "$GITHUB_OUTPUT"
           echo "sha_darwin_arm64=$SHA_DARWIN_ARM64" >> "$GITHUB_OUTPUT"
           echo "sha_linux_amd64=$SHA_LINUX_AMD64" >> "$GITHUB_OUTPUT"
           echo "sha_linux_arm64=$SHA_LINUX_ARM64" >> "$GITHUB_OUTPUT"
+          echo "sha_source=$SHA_SOURCE" >> "$GITHUB_OUTPUT"
 
       - name: Setup Homebrew
         uses: Homebrew/actions/setup-homebrew@main
@@ -63,6 +70,7 @@ jobs:
           SHA_DARWIN_ARM64: ${{ steps.vars.outputs.sha_darwin_arm64 }}
           SHA_LINUX_AMD64: ${{ steps.vars.outputs.sha_linux_amd64 }}
           SHA_LINUX_ARM64: ${{ steps.vars.outputs.sha_linux_arm64 }}
+          SHA_SOURCE: ${{ steps.vars.outputs.sha_source }}
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -73,28 +81,39 @@ jobs:
           content = path.read_text()
 
           version = os.environ["VERSION"]
-          sha_darwin = os.environ["SHA_DARWIN_ARM64"]
-          sha_linux_amd64 = os.environ["SHA_LINUX_AMD64"]
-          sha_linux_arm64 = os.environ["SHA_LINUX_ARM64"]
 
-          content = re.sub(
-              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_darwin_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{version}\g<2>{version}\g<3>{sha_darwin}\4',
+          def bump(content, pattern, sha):
+              content, count = re.subn(
+                  pattern,
+                  rf'\g<1>{version}\g<2>{version}\g<3>{sha}\4',
+                  content,
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit(f"no url matched {pattern!r}, the formula layout changed")
+              return content
+
+          for platform, sha in (
+              ("darwin_arm64", os.environ["SHA_DARWIN_ARM64"]),
+              ("linux_amd64", os.environ["SHA_LINUX_AMD64"]),
+              ("linux_arm64", os.environ["SHA_LINUX_ARM64"]),
+          ):
+              content = bump(
+                  content,
+                  rf'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_{platform}\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{{64}}(")',
+                  sha,
+              )
+
+          # The source tarball has no per-platform name, so it needs its own
+          # substitution rather than the loop above.
+          content, count = re.subn(
+              r'(archive/refs/tags/v)[^/"]+(\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
+              rf'\g<1>{version}\g<2>{os.environ["SHA_SOURCE"]}\3',
               content,
               count=1,
           )
-          content = re.sub(
-              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_linux_amd64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{version}\g<2>{version}\g<3>{sha_linux_amd64}\4',
-              content,
-              count=1,
-          )
-          content = re.sub(
-              r'(releases/download/v)[^/]+(/kairos-lab_)[^_]+(_linux_arm64\.tar\.gz"\n\s+sha256\s+")[0-9a-f]{64}(")',
-              rf'\g<1>{version}\g<2>{version}\g<3>{sha_linux_arm64}\4',
-              content,
-              count=1,
-          )
+          if count != 1:
+              raise SystemExit("no source tarball url matched, the formula layout changed")
 
           path.write_text(content)
           PY
@@ -118,5 +137,6 @@ jobs:
               - darwin arm64
               - linux amd64
               - linux arm64
+              - source tarball, used by the macOS amd64 build-from-source path
           branch: chore/update-kairos-lab-${{ steps.vars.outputs.version }}
           delete-branch: true
